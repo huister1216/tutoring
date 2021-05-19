@@ -19,7 +19,7 @@ class NaturalMerge:
 		self.partitionIndex = 0
 		self.mergeLevel = -1
 		self.sorted_array = None
-		self.dot = Digraph(comment='Merge Sort',engine='dot')
+		self.dot = Digraph(comment='Merge Sort',engine='dot',format='jpg')
 		self.dot.attr(newrank='true')
 		self.dot.attr(ranksep='3')
 	## increments and returns the next partition number to be used for creation
