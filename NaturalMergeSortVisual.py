@@ -4,7 +4,7 @@ from graphviz import Digraph
 
 ## Merge class
 # This  is a customizable merge sort where the initial partitions can be
-# divided by sections of the initial array that are already sorted. Also you can
+# divided by sections of the initial array that are already sorted as well as
 # define the number of partitions to merge per level and generate an image
 class NaturalMerge:
 	## The Constructor
@@ -22,22 +22,28 @@ class NaturalMerge:
 		self.dot = Digraph(comment='Merge Sort',engine='dot',format='jpg')
 		self.dot.attr(newrank='true')
 		self.dot.attr(ranksep='3')
+	
+	
 	## increments and returns the next partition number to be used for creation
 	def getNextPartitionIndex(self):
 		self.partitionIndex += 1
 		return self.partitionIndex
+	
+	
+	## increments and returns the next merge level number to be used
 	def getNextMergeLevel(self):
 		self.mergeLevel += 1
 		return self.mergeLevel
 
+
 	## creation of the initial partitions based on smallest or incremental sets
-	# @normalOrNatural defines how the initial array partitions should be split
-	# @unsortedArray is the initial array
+	# @param normalOrNatural defines how the initial array partitions are split
+	# @param unsortedArray is the initial array
 	# Partitions are in the form of 
 	# [ partition's ID Title, 
 	# FirstIndex of partition in original array,
 	# LastIndex of partition in original array ]
-	def createInitialPartitions(self,normalOrNatural,unsortedArray):
+	def createInitialPartitions(self,normalOrNatural: str,unsortedArray: list) -> list:
 		currentArrayGroup = []
 		length = self.input_size = len(unsortedArray)
 		# if partitions should be split by smallest 1 number partitions
@@ -67,46 +73,20 @@ class NaturalMerge:
 		# Draw initial Partitions with graphviz
 		self.drawGraphvizPartitionLevel(currentArrayGroup,unsortedArray)
 		return currentArrayGroup
-
-
-	## Graphviz Dot portion for creating picture of node groups
-	def drawGraphvizPartitionLevel(self,currentArrayGroup,unsortedArray):
-		mergeLevel = str(self.getNextMergeLevel())
-		subgraphTitle = 'Merge Level ' + mergeLevel
-		clusterID = 'cluster_' + mergeLevel
-		with self.dot.subgraph(name=clusterID) as c:
-			c.attr(label=subgraphTitle)
-			c.attr(rank='same')
-			c.attr(style='filled')
-			c.attr(color='lightgrey')
-			c.node_attr.update(style='filled', color='white',constraint='false')
-			#appending first nodes of each level to an array for alignment
-			# Creating the Node drawings
-			for partition in currentArrayGroup:
-				values = ''
-				for i in range(partition[1],partition[2]+1):
-					values += str(unsortedArray[i]) + ' '
-				partitionID = str(partition[0])
-				c.node(partitionID, label=values, color='brown', fillcolor='lightblue', style='filled', width='1')
-			# Creating the Edge drawings
-			numPartitions = len(currentArrayGroup)
-			for i in range(0,numPartitions-1):
-				startNodeString = str(currentArrayGroup[i][0])
-				endNodeString = str(currentArrayGroup[i+1][0])
-				c.edge(startNodeString,endNodeString,tailport='e',headport='w',color='grey')
 	
 
 	## This is the main sort function for natural merge sort
-	# @normalOrNatural defines how the initial array partitions should be split
-	# @unsortedArray is the initial array that we want to sort
-	def mergeSort(self,numWayMerge,normalOrNatural,unsortedArray):
+	# @param numWayMerge is the number of partitions we want to merge at a time
+	# @param normalOrNatural defines how the initial array partitions are split
+	# @param unsortedArray is the initial array that we want to sort
+	def mergeSort(self,numWayMerge: int,normalOrNatural: str,unsortedArray: list) -> list:
 		self.start_time = time_ns()
 		length = self.input_size = len(unsortedArray)
 		currentArrayGroup = self.createInitialPartitions(normalOrNatural,unsortedArray)
 		self.size_temp_space = len(currentArrayGroup) * 3
 		nextArrayGroup = []
 		while len(currentArrayGroup) > 0:
-			# Pop the number of partitions based on numWayMerge from currentArrayGroup
+			# Pop the number of partitions based on numWayMerge from partitions
 			mergingPartitions = []
 			i = 0
 			while i < numWayMerge and len(currentArrayGroup) > 0:
@@ -121,7 +101,7 @@ class NaturalMerge:
 			#creating the edges for the dot visual
 			for partition in mergingPartitions:
 				self.dot.edge(str(partition[0]),str(combinedPartitionIndex),tailport='s',headport='n')
-			# Compares the first&smallest value of each partition to find the smallest
+			# Compares the first&smallest value of each partition and find smallest
 			while len(mergingPartitions) > 0:
 				if self.printDebug:
 					print("merging partitions >" + str(mergingPartitions))
@@ -174,6 +154,35 @@ class NaturalMerge:
 		self.sorted_array = unsortedArray
 		self.end_time = time_ns()
 		return unsortedArray
+
+
+	## Graphviz Dot portion for creating picture of node groups
+	# @param currentArrayGroup is the node group level that we want to draw
+	# @param unsortedArray is the initial array
+	def drawGraphvizPartitionLevel(self,currentArrayGroup: list,unsortedArray: list) -> None:
+		mergeLevel = str(self.getNextMergeLevel())
+		subgraphTitle = 'Merge Level ' + mergeLevel
+		clusterID = 'cluster_' + mergeLevel
+		with self.dot.subgraph(name=clusterID) as c:
+			c.attr(label=subgraphTitle)
+			c.attr(rank='same')
+			c.attr(style='filled')
+			c.attr(color='lightgrey')
+			c.node_attr.update(style='filled', color='white',constraint='false')
+			#appending first nodes of each level to an array for alignment
+			# Creating the Node drawings
+			for partition in currentArrayGroup:
+				values = ''
+				for i in range(partition[1],partition[2]+1):
+					values += str(unsortedArray[i]) + ' '
+				partitionID = str(partition[0])
+				c.node(partitionID, label=values, color='brown', fillcolor='lightblue', style='filled', width='1')
+			# Creating the Edge drawings
+			numPartitions = len(currentArrayGroup)
+			for i in range(0,numPartitions-1):
+				startNodeString = str(currentArrayGroup[i][0])
+				endNodeString = str(currentArrayGroup[i+1][0])
+				c.edge(startNodeString,endNodeString,tailport='e',headport='w',color='grey')
 	
 
 	## This function performs runtime metrics on the program
@@ -193,7 +202,7 @@ class NaturalMerge:
 
 
 	## This function takes in a string expression and writes it to an output file
-	# @output_file is the textIO object that contains the opened file to write to
+	# @param output_file is the textIO object that contains the opened file to write to
 	def write_to_file(self, output_file: TextIO):
 		output_file.write("Natural Merge Sort," + '\n')
 		output_file.write("Sorted," + str(self.sorted_array) + '\n')
